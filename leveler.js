@@ -62,8 +62,6 @@ var Leveler = function(file) {
             ];
             result = pointInTriangle(triangle, coordinate);
             if(result !== false) {
-                // console.log(triangle);
-                // console.log(result.triangle);
                 // Have to return the indexes because miss a dimension here
                 result.triangle = that.triangles[i];
                 return result;
@@ -109,26 +107,23 @@ var Leveler = function(file) {
     function parseFile(file) {
         var i = 0, hightest = 0;
         //XXX: file will be a file, not an array of points as now
-        // file.sort(comparePosition);
+        file.sort(comparePosition);
         that.realPoints = file;  //TODO: change this is really the file here
-        console.log(that.realPoints[0][0]);
-        console.log(that.realPoints);
 
-        // //Remove the points in the same place
-        // for(i = 0; i < that.realPoints.length; i++) {
-        //     while(i < that.realPoints.length - 1 &&
-        //             pointsEqual(that.realPoints[i], that.realPoints[i+1]))
-        //     {
-        //         if(that.realPoints[i][2] !== that.realPoints[i+1][2]) {
-        //             hightest = Math.max(that.realPoints[i][2],
-        //                     that.realPoints[i+1][2]);
-        //         }
-        //         that.realPoints.splice(i+1, 0);
-        //         that.realPoints[i][2] = hightest;
-        //     }
-        // }
+        //Remove the points in the same place
+        for(i = 0; i < that.realPoints.length; i++) {
+            while(i < that.realPoints.length - 1 &&
+                    pointsEqual(that.realPoints[i], that.realPoints[i+1]))
+            {
+                if(that.realPoints[i][2] !== that.realPoints[i+1][2]) {
+                    hightest = Math.max(that.realPoints[i][2],
+                            that.realPoints[i+1][2]);
+                }
+                that.realPoints.splice(i+1, 1);
+                that.realPoints[i][2] = hightest;
+            }
+        }
         convertPointsForTriangulation(that.realPoints);
-        console.log(that.points);
         return file;
     }
 
@@ -136,9 +131,6 @@ var Leveler = function(file) {
     // that.points = parseFile(file);
     that.triangles = triangulate(that.points);
 
-    for (var i=0; i < that.points.length; i++) {
-        console.log("("+that.realPoints[i][0]+", "+that.realPoints[i][1]+", "+that.realPoints[i][2]+") ("+that.points[i][0]+", "+that.realPoints[i][1]+", "+that.points[i][2]+")");
-    }
 };
 
 exports.Leveler = Leveler;

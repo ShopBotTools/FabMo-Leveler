@@ -152,7 +152,7 @@ var level;
 document.getElementById("test").onclick = function() {
     points = generatePoints(0, 0, zMin, width, height, zMax, numberPoints);
     //Just for testing we put a point equal to the first one
-    // points.push([ points[0][0], y : points[0][1], 1337 ]);
+    points.push([ points[0][0], points[0][1], 99999 ]);
 
 
     level = new leveler.Leveler(points);  //XXX: should be a file later
