@@ -98,7 +98,7 @@ function convertForTriangulate(points) {
         point = [];
         point.push(points[i].x);
         point.push(points[i].y);
-        // point.push(points[i].z);
+        point.push(points[i].z);
         pts.push(point);
     }
 
@@ -149,7 +149,7 @@ function getMousePos(canvas, evt) {
 var canvas = document.getElementById("canvas");
 var width = canvas.width, height = canvas.height, zMin = 0, zMax = 10;
 var context = canvas.getContext("2d");
-var numberPoints = 2;
+var numberPoints = 10;
 var points, convertPoints, triangles;
 var level;
 
@@ -174,6 +174,7 @@ canvas.addEventListener('mouseup', function(evt) {
     // var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
     // console.log(message);
     var result = level.findTriangle(convertPos);
+    var height = level.findHeight(convertPos);
 
     drawTriangles(context, triangles, points, zMin, zMax);
     if(result !== false) {

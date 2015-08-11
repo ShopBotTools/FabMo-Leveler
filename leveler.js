@@ -50,7 +50,8 @@ var Leveler = function(file) {
         return { triangle : triangle, u : u, v : v };
     }
 
-    that.findTriangle = function(/* triangles, points, */ coordinate) {
+    //triangle is the triangle with the coordinates of each point
+    that.findTriangle = function(coordinate) {
         var i = 0;
         var result, triangle;
         for(i = 0; i < that.triangles.length; i++) {
@@ -61,6 +62,9 @@ var Leveler = function(file) {
             ];
             result = pointInTriangle(triangle, coordinate);
             if(result !== false) {
+                // console.log(triangle);
+                // console.log(result.triangle);
+                // Have to return the indexes because miss a dimension here
                 result.triangle = that.triangles[i];
                 return result;
             }
@@ -68,13 +72,39 @@ var Leveler = function(file) {
         return false;
     };
 
+    that.findHeight = function(coordinate) {
+        var triangle = that.findTriangle(coordinate);
+        if(triangle === false) {
+            return false;
+        }
+        //Recuperate the true points and calculate the height
+        var tr = triangle.triangle, u = triangle.u, v = triangle.v;
+        var a = that.realPoints[tr[0]],  b = that.realPoints[tr[1]];
+        var c = that.realPoints[tr[2]];
+        var height = a[2] + u * (c[2] - a[2]) + v * (b[2] - a[2]);
+        console.log("[" + a[2] + ", " + b[2] + ", " + c[2] + "]");
+        console.log(height);
+        return height;
+    };
+
+    function convertPointsForTriangulation(points) {
+        that.points = [];
+        var i = 0;
+        for(i=0; i < points.length; i++) {
+            that.points.push([points[i][0], points[i][1]]);
+        }
+    }
+
     //XXX: later, it must be the file which is parse. For the moment this is
     //the points
     function parseFile(file) {
+        that.realPoints = file;  //TODO: change this is really the file here
+        convertPointsForTriangulation(that.realPoints);
         return file;
     }
 
-    that.points = parseFile(file);
+    parseFile(file);
+    // that.points = parseFile(file);
     that.triangles = triangulate(that.points);
 };
 
