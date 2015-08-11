@@ -2,7 +2,7 @@
 /*global Triangulation*/
 
 // var triangulation = require("delaunay-triangulate");
-var topology = require("./topology");
+var leveler = require("./leveler");
 
 /*
  * File file is here only to test the module.
@@ -160,7 +160,7 @@ var points, convertPoints, triangles;
 document.getElementById("test").onclick = function() {
     points = generatePoints(0, 0, zMin, width, height, zMax, numberPoints);
     convertPoints = convertForTriangulate(points);
-    triangles = topology.getTriangles(convertPoints);
+    triangles = leveler.getTriangles(convertPoints);
 
     drawTriangles(context, triangles, points, zMin, zMax);
     // drawPoints(context, points, zMin, zMax, true);
@@ -175,7 +175,7 @@ canvas.addEventListener('mouseup', function(evt) {
     var convertPos = [mousePos.x, mousePos.y];
     var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
     console.log(message);
-    var result = topology.findTriangle(triangles, convertPoints, convertPos);
+    var result = leveler.findTriangle(triangles, convertPoints, convertPos);
     // console.log(result);
 
     drawTriangles(context, triangles, points, zMin, zMax);
