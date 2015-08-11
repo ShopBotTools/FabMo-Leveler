@@ -130,11 +130,6 @@ function convertForDrawing(triangles) {
 }
 
 function colorTriangle(context, triangle, points) {
-    // var tr = [];
-    // tr.push({ x : points[triangle[0]][0], y : points[triangle[0]][1] });
-    // tr.push({ x : points[triangle[1]][0], y : points[triangle[1]][1] });
-    // tr.push({ x : points[triangle[2]][0], y : points[triangle[2]][1] });
-    // console.log(points[triangle[0]]);
     fillTriangle(context,
             { x : points[triangle[0]].x, y : points[triangle[0]].y },
             { x : points[triangle[1]].x, y : points[triangle[1]].y },
@@ -154,13 +149,16 @@ function getMousePos(canvas, evt) {
 var canvas = document.getElementById("canvas");
 var width = canvas.width, height = canvas.height, zMin = 0, zMax = 10;
 var context = canvas.getContext("2d");
-var numberPoints = 10;
+var numberPoints = 2;
 var points, convertPoints, triangles;
+var level;
 
 document.getElementById("test").onclick = function() {
     points = generatePoints(0, 0, zMin, width, height, zMax, numberPoints);
     convertPoints = convertForTriangulate(points);
-    triangles = leveler.getTriangles(convertPoints);
+
+    level = new leveler.Leveler(convertPoints);  //XXX: should be a file later
+    triangles = level.triangles;
 
     drawTriangles(context, triangles, points, zMin, zMax);
     // drawPoints(context, points, zMin, zMax, true);
@@ -173,10 +171,9 @@ canvas.addEventListener('mouseup', function(evt) {
     }
     var mousePos = getMousePos(canvas, evt);
     var convertPos = [mousePos.x, mousePos.y];
-    var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
-    console.log(message);
-    var result = leveler.findTriangle(triangles, convertPoints, convertPos);
-    // console.log(result);
+    // var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
+    // console.log(message);
+    var result = level.findTriangle(convertPos);
 
     drawTriangles(context, triangles, points, zMin, zMax);
     if(result !== false) {
