@@ -18,7 +18,7 @@ function generatePoints(xMin, yMin, zMin, xMax, yMax, zMax, number) {
         x = Math.random() * xRand + xMin;
         y = Math.random() * yRand + yMin;
         z = Math.random() * zRand + zMin;
-        points.push({ x : x, y : y, z : z });
+        points.push([ x, y, z ]);
     }
 
     return points;
@@ -42,17 +42,17 @@ function drawDot(context, x, y, pHeight, radius) {
 
 function drawLine(context, pointA, pointB) {
     context.beginPath();
-    context.moveTo(pointA.x, pointA.y);
-    context.lineTo(pointB.x, pointB.y);
+    context.moveTo(pointA[0], pointA[1]);
+    context.lineTo(pointB[0], pointB[1]);
     context.closePath();
     context.stroke();
 }
 
 function fillTriangle(context, pointA, pointB, pointC) {
     context.beginPath();
-    context.moveTo(pointA.x, pointA.y);
-    context.lineTo(pointB.x, pointB.y);
-    context.lineTo(pointC.x, pointC.y);
+    context.moveTo(pointA[0], pointA[1]);
+    context.lineTo(pointB[0], pointB[1]);
+    context.lineTo(pointC[0], pointC[1]);
     context.closePath();
     context.fillStyle = "rgb(200,0,0)";
     context.fill();
@@ -71,9 +71,9 @@ function drawPoints(context, points, zMin, zMax, clear) {
         if(zTotal === 0) {
             pHeight = 1;
         } else {
-            pHeight = Math.abs(points[i].z - zMin) / zTotal;
+            pHeight = Math.abs(points[i][2] - zMin) / zTotal;
         }
-        drawDot(context, points[i].x, points[i].y, pHeight, 2);
+        drawDot(context, points[i][0], points[i][1], pHeight, 2);
     }
 
 }
@@ -96,9 +96,9 @@ function convertForTriangulate(points) {
     var i = 0;
     for(i=0; i < points.length; i++) {
         point = [];
-        point.push(points[i].x);
-        point.push(points[i].y);
-        point.push(points[i].z);
+        point.push(points[i][0]);
+        point.push(points[i][1]);
+        point.push(points[i][2]);
         pts.push(point);
     }
 
@@ -111,17 +111,16 @@ function convertForDrawing(triangles) {
     for(i=0; i < triangles.length; i++) {
         point = {};
         tr = [];
-        point.x = triangles[i][0][0];
-        point.y = triangles[i][0][1];
-        // point.push(triangles[i].z);
+        point[0] = triangles[i][0][0];
+        point[1] = triangles[i][0][1];
         tr.push(point);
         point = {};
-        point.x = triangles[i][1][0];
-        point.y = triangles[i][1][1];
+        point[0] = triangles[i][1][0];
+        point[1] = triangles[i][1][1];
         tr.push(point);
         point = {};
-        point.x = triangles[i][2][0];
-        point.y = triangles[i][2][1];
+        point[0] = triangles[i][2][0];
+        point[1] = triangles[i][2][1];
         tr.push(point);
         pts.push(tr);
     }
@@ -130,11 +129,8 @@ function convertForDrawing(triangles) {
 }
 
 function colorTriangle(context, triangle, points) {
-    fillTriangle(context,
-            { x : points[triangle[0]].x, y : points[triangle[0]].y },
-            { x : points[triangle[1]].x, y : points[triangle[1]].y },
-            { x : points[triangle[2]].x, y : points[triangle[2]].y }
-            );
+    fillTriangle(context, points[triangle[0]], points[triangle[1]],
+            points[triangle[2]]);
 }
 
 function getMousePos(canvas, evt) {
@@ -155,18 +151,19 @@ var level;
 
 document.getElementById("test").onclick = function() {
     points = generatePoints(0, 0, zMin, width, height, zMax, numberPoints);
-    convertPoints = convertForTriangulate(points);
+    //Just for testing we put a point equal to the first one
+    // points.push([ points[0][0], y : points[0][1], 1337 ]);
 
-    level = new leveler.Leveler(convertPoints);  //XXX: should be a file later
+
+    level = new leveler.Leveler(points);  //XXX: should be a file later
     triangles = level.triangles;
 
     drawTriangles(context, triangles, points, zMin, zMax);
     // drawPoints(context, points, zMin, zMax, true);
-    // colorTriangle(context, triangles[0], points);
 };
 
 canvas.addEventListener('mouseup', function(evt) {
-    if(convertPoints === undefined) {
+    if(points === undefined) {
         return;
     }
     var mousePos = getMousePos(canvas, evt);
@@ -177,6 +174,7 @@ canvas.addEventListener('mouseup', function(evt) {
     var height = level.findHeight(convertPos);
 
     drawTriangles(context, triangles, points, zMin, zMax);
+    console.log(result);
     if(result !== false) {
         colorTriangle(context, result.triangle, points);
     }
