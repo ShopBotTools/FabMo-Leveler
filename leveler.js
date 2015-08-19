@@ -1,6 +1,7 @@
 /*jslint todo: true, browser: true, continue: true, white: true*/
 /*global define*/
 var triangulate = require("delaunay-triangulate");
+var js = require("fs");
 
 var Leveler = function(file) {
     "use strict";
@@ -77,20 +78,21 @@ var Leveler = function(file) {
         }
         //Recuperate the true points and calculate the height
         var tr = triangle.triangle, u = triangle.u, v = triangle.v;
-        var a = that.realPoints[tr[0]],  b = that.realPoints[tr[1]];
-        var c = that.realPoints[tr[2]];
+        var a = that.points[tr[0]],  b = that.points[tr[1]];
+        var c = that.points[tr[2]];
         var height = a[2] + u * (c[2] - a[2]) + v * (b[2] - a[2]);
         console.log("[" + a[2] + ", " + b[2] + ", " + c[2] + "]");
         console.log(height);
         return height;
     };
 
-    function convertPointsForTriangulation(points) {
-        that.points = [];
+    function convertPointsForTriangulation(points3D) {
+        var points2D = [];
         var i = 0;
-        for(i=0; i < points.length; i++) {
-            that.points.push([points[i][0], points[i][1]]);
+        for(i=0; i < points3D.length; i++) {
+            points2D.push([points3D[i][0], points3D[i][1]]);
         }
+        return points2D;
     }
 
     //Compare the two points, returns negative if a < b, 0 if a == b else positive
@@ -106,30 +108,30 @@ var Leveler = function(file) {
     //the points
     function parseFile(file) {
         var i = 0, hightest = 0;
+        var points2D = [];
         //XXX: file will be a file, not an array of points as now
         file.sort(comparePosition);
-        that.realPoints = file;  //TODO: change this is really the file here
+        that.points = file;  //TODO: change this is really the file here
 
         //Remove the points in the same place
-        for(i = 0; i < that.realPoints.length; i++) {
-            while(i < that.realPoints.length - 1 &&
-                    pointsEqual(that.realPoints[i], that.realPoints[i+1]))
+        for(i = 0; i < that.points.length; i++) {
+            while(i < that.points.length - 1 &&
+                    pointsEqual(that.points[i], that.points[i+1]))
             {
-                if(that.realPoints[i][2] !== that.realPoints[i+1][2]) {
-                    hightest = Math.max(that.realPoints[i][2],
-                            that.realPoints[i+1][2]);
+                if(that.points[i][2] !== that.points[i+1][2]) {
+                    hightest = Math.max(that.points[i][2],
+                            that.points[i+1][2]);
                 }
-                that.realPoints.splice(i+1, 1);
-                that.realPoints[i][2] = hightest;
+                that.points.splice(i+1, 1);
+                that.points[i][2] = hightest;
             }
         }
-        convertPointsForTriangulation(that.realPoints);
-        return file;
+
+        points2D = convertPointsForTriangulation(that.points);
+        that.triangles = triangulate(points2D);
     }
 
     parseFile(file);
-    // that.points = parseFile(file);
-    that.triangles = triangulate(that.points);
 
 };
 
