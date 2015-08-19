@@ -1,7 +1,7 @@
 /*jslint todo: true, browser: true, continue: true, white: true*/
 /*global define*/
 var triangulate = require("delaunay-triangulate");
-var js = require("fs");
+var fs = require("fs");
 
 var Leveler = function(file) {
     "use strict";
@@ -104,14 +104,31 @@ var Leveler = function(file) {
         return (a[0] === b[0] && a[1] === b[1]);
     }
 
-    //XXX: later, it must be the file which is parse. For the moment this is
-    //the points
-    function parseFile(file) {
+    function convertPointsObjToPointsArr(points) {
+        var i = 0;
+        var arr = [];
+
+        for(i=0; i < points.length; i++) {
+            arr.push([points[i].x, points[i].y, points[i].z]);
+        }
+
+        return arr;
+    }
+
+    function parseFile(error, data) {
+        if(error) {
+            console.error(error);
+            return;
+        }
+
         var i = 0, hightest = 0;
         var points2D = [];
-        //XXX: file will be a file, not an array of points as now
-        file.sort(comparePosition);
-        that.points = file;  //TODO: change this is really the file here
+        var json = JSON.parse(data);
+        //TODO: test if the data are good
+        // json = convertPointsObjToPointsArr(json);
+
+        that.points = json;
+        that.points.sort(comparePosition);
 
         //Remove the points in the same place
         for(i = 0; i < that.points.length; i++) {
@@ -131,8 +148,7 @@ var Leveler = function(file) {
         that.triangles = triangulate(points2D);
     }
 
-    parseFile(file);
-
+    fs.readFile(file, "utf8", parseFile);
 };
 
 exports.Leveler = Leveler;
