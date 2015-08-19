@@ -81,8 +81,6 @@ var Leveler = function(file) {
         var a = that.points[tr[0]],  b = that.points[tr[1]];
         var c = that.points[tr[2]];
         var height = a[2] + u * (c[2] - a[2]) + v * (b[2] - a[2]);
-        console.log("[" + a[2] + ", " + b[2] + ", " + c[2] + "]");
-        console.log(height);
         return height;
     };
 
@@ -125,7 +123,7 @@ var Leveler = function(file) {
         var points2D = [];
         var json = JSON.parse(data);
         //TODO: test if the data are good
-        // json = convertPointsObjToPointsArr(json);
+        json = convertPointsObjToPointsArr(json);
 
         that.points = json;
         that.points.sort(comparePosition);

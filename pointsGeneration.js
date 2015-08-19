@@ -3,6 +3,7 @@
 
 // var triangulation = require("delaunay-triangulate");
 var leveler = require("./leveler");
+var fs = require("fs");
 
 /*
  * File file is here only to test the module.
@@ -12,7 +13,6 @@ var leveler = require("./leveler");
 function generatePoints(xMin, yMin, zMin, xMax, yMax, zMax, number) {
     var i = 0, x = 0, y = 0, z = 0;
     var xRand = xMax - xMin, yRand = yMax - yMin, zRand = zMax - zMin;
-    // console.log(xRand + " " + yRand + " " + zRand);
     var points = [];
     for(i = 1; i <= number; i++) {
         x = Math.random() * xRand + xMin;
@@ -56,9 +56,6 @@ function fillTriangle(context, pointA, pointB, pointC) {
     context.closePath();
     context.fillStyle = "rgb(200,0,0)";
     context.fill();
-    // console.log(pointA);
-    // console.log(pointB);
-    // console.log(pointC);
 }
 
 function drawPoints(context, points, zMin, zMax, clear) {
@@ -141,6 +138,36 @@ function getMousePos(canvas, evt) {
     };
 }
 
+function callbackWrite(error) {
+    if(error) {
+        console.error(error);
+        return;
+    }
+
+    level = new leveler.Leveler("test.txt");
+    //Time to read the file because asynchronous
+    setTimeout(function() {
+        triangles = level.triangles;
+        points = level.points;
+
+        drawTriangles(context, triangles, points, zMin, zMax);
+        // drawPoints(context, points, zMin, zMax, true);
+    }, 3000);
+}
+
+function writePoints(points) {
+    var str = "[\n";
+    var i = 0;
+
+    for(i=0; i < points.length; i++) {
+            str += '{ "x" : ' + points[i][0] + ', "y" : ' + points[i][1] + ', ';
+            str += '"z" : ' + points[i][2] + ' },\n';
+    }
+    str = str.substring(0, str.length-2);
+    str += "\n]";
+    fs.writeFile("test.txt", str, "utf8", callbackWrite);
+}
+
 // Initialization
 var canvas = document.getElementById("canvas");
 var width = canvas.width, height = canvas.height, zMin = 0, zMax = 10;
@@ -153,13 +180,7 @@ document.getElementById("test").onclick = function() {
     points = generatePoints(0, 0, zMin, width, height, zMax, numberPoints);
     //Just for testing we put a point equal to the first one
     points.push([ points[0][0], points[0][1], 99999 ]);
-
-
-    level = new leveler.Leveler(points);  //XXX: should be a file later
-    triangles = level.triangles;
-
-    drawTriangles(context, triangles, points, zMin, zMax);
-    // drawPoints(context, points, zMin, zMax, true);
+    writePoints(points);
 };
 
 canvas.addEventListener('mouseup', function(evt) {
@@ -168,8 +189,6 @@ canvas.addEventListener('mouseup', function(evt) {
     }
     var mousePos = getMousePos(canvas, evt);
     var convertPos = [mousePos.x, mousePos.y];
-    // var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
-    // console.log(message);
     var result = level.findTriangle(convertPos);
     var height = level.findHeight(convertPos);
 
