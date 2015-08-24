@@ -3,7 +3,8 @@
 var triangulate = require("delaunay-triangulate");
 var fs = require("fs");
 
-var Leveler = function(file) {
+//callback will be called when the triangulation is done (optional argument)
+var Leveler = function(file, callback) {
     "use strict";
     var that = this;
 
@@ -102,16 +103,25 @@ var Leveler = function(file) {
         return (a[0] === b[0] && a[1] === b[1]);
     }
 
-    function convertPointsObjToPointsArr(points) {
+    function parseData(data) {
         var i = 0;
-        var arr = [];
+        var arr = data.split("\n"), point = [], points = [];
 
-        for(i=0; i < points.length; i++) {
-            arr.push([points[i].x, points[i].y, points[i].z]);
+        for(i=0; i < arr.length; i++) {
+            point = arr[i].split(",");
+
+            if(point.length === 3) {
+                points.push([
+                    parseFloat(point[0], 10),
+                    parseFloat(point[1], 10),
+                    parseFloat(point[2], 10),
+                ]);
+            }
         }
 
-        return arr;
+        return points;
     }
+
 
     function parseFile(error, data) {
         if(error) {
@@ -121,11 +131,8 @@ var Leveler = function(file) {
 
         var i = 0, hightest = 0;
         var points2D = [];
-        var json = JSON.parse(data);
-        //TODO: test if the data are good
-        json = convertPointsObjToPointsArr(json);
 
-        that.points = json;
+        that.points = parseData(data);
         that.points.sort(comparePosition);
 
         //Remove the points in the same place
@@ -144,6 +151,10 @@ var Leveler = function(file) {
 
         points2D = convertPointsForTriangulation(that.points);
         that.triangles = triangulate(points2D);
+
+        if(callback !== undefined) {
+            callback();
+        }
     }
 
     fs.readFile(file, "utf8", parseFile);

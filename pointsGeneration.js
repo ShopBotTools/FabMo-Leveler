@@ -144,27 +144,24 @@ function callbackWrite(error) {
         return;
     }
 
-    level = new leveler.Leveler("test.txt");
-    //Time to read the file because asynchronous
-    setTimeout(function() {
+    var makeTriangles = function() {
         triangles = level.triangles;
         points = level.points;
 
         drawTriangles(context, triangles, points, zMin, zMax);
-        // drawPoints(context, points, zMin, zMax, true);
-    }, 3000);
+    };
+
+    level = new leveler.Leveler("test.txt", makeTriangles);
 }
 
 function writePoints(points) {
-    var str = "[\n";
+    var str = "";
     var i = 0;
 
     for(i=0; i < points.length; i++) {
-            str += '{ "x" : ' + points[i][0] + ', "y" : ' + points[i][1] + ', ';
-            str += '"z" : ' + points[i][2] + ' },\n';
+            str += points[i][0] + ',' + points[i][1] + ',' + points[i][2] + '\n';
     }
-    str = str.substring(0, str.length-2);
-    str += "\n]";
+    str = str.substring(0, str.length-1);
     fs.writeFile("test.txt", str, "utf8", callbackWrite);
 }
 
