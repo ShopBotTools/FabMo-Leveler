@@ -2,7 +2,7 @@
 /*global Triangulation*/
 
 // var triangulation = require("delaunay-triangulate");
-var leveler = require("./leveler");
+var Leveler = require("./leveler").Leveler;
 var fs = require("fs");
 
 /*
@@ -70,7 +70,7 @@ function drawPoints(context, points, zMin, zMax, clear) {
         } else {
             pHeight = Math.abs(points[i][2] - zMin) / zTotal;
         }
-        drawDot(context, points[i][0], points[i][1], pHeight, 2);
+        drawDot(context, points[i][0] * zoom, points[i][1] * zoom, pHeight, 2);
     }
 
 }
@@ -78,11 +78,24 @@ function drawPoints(context, points, zMin, zMax, clear) {
 function drawTriangles(context, triangles, points, zMin, zMax) {
     //triangles store the index of the points in points
     var i = 0;
+    var a = [0, 0], b = [0, 0], c = [0, 0];
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     for(i = 0; i < triangles.length; i++) {
-        drawLine(context, points[triangles[i][0]], points[triangles[i][1]]);
-        drawLine(context, points[triangles[i][1]], points[triangles[i][2]]);
-        drawLine(context, points[triangles[i][2]], points[triangles[i][0]]);
+        a = [
+            points[triangles[i][0]][0] * zoom,
+            points[triangles[i][0]][1] * zoom
+        ];
+        b = [
+            points[triangles[i][1]][0] * zoom,
+            points[triangles[i][1]][1] * zoom
+        ];
+        c = [
+            points[triangles[i][2]][0] * zoom,
+            points[triangles[i][2]][1] * zoom
+        ];
+        drawLine(context, a, b);
+        drawLine(context, b, c);
+        drawLine(context, c, a);
     }
 
     drawPoints(context, points, zMin, zMax, false);
@@ -126,8 +139,12 @@ function convertForDrawing(triangles) {
 }
 
 function colorTriangle(context, triangle, points) {
-    fillTriangle(context, points[triangle[0]], points[triangle[1]],
-            points[triangle[2]]);
+    var a = [ points[triangle[0]][0] * zoom, points[triangle[0]][1] * zoom ];
+    var b = [ points[triangle[1]][0] * zoom, points[triangle[1]][1] * zoom ];
+    var c = [ points[triangle[2]][0] * zoom, points[triangle[2]][1] * zoom ];
+    fillTriangle(context, a, b, c);
+    // fillTriangle(context, points[triangle[0]], points[triangle[1]],
+    //         points[triangle[2]]);
 }
 
 function getMousePos(canvas, evt) {
@@ -144,17 +161,10 @@ function callbackWrite(error) {
         return;
     }
 
-    var makeTriangles = function() {
-        triangles = level.triangles;
-        points = level.points;
-
-        drawTriangles(context, triangles, points, zMin, zMax);
-    };
-
-    level = new leveler.Leveler("test.txt", makeTriangles);
+    setLeveler("test.txt");
 }
 
-function writePoints(points) {
+function writePoints(points, callback) {
     var str = "";
     var i = 0;
 
@@ -162,7 +172,25 @@ function writePoints(points) {
             str += points[i][0] + ',' + points[i][1] + ',' + points[i][2] + '\n';
     }
     str = str.substring(0, str.length-1);
-    fs.writeFile("test.txt", str, "utf8", callbackWrite);
+    fs.writeFile("test.txt", str, "utf8", callback);
+}
+
+function generateAndWritePoints() {
+    points = generatePoints(0, 0, zMin, width, height, zMax, numberPoints);
+    //Just for testing we put a point equal to the first one
+    // points.push([ points[0][0], points[0][1], 99999 ]);
+    writePoints(points, callbackWrite);
+}
+
+function setLeveler(filename) {
+    var makeTriangles = function() {
+        triangles = leveler.triangles;
+        points = leveler.points;
+
+        drawTriangles(context, triangles, points, zMin, zMax);
+    };
+
+    leveler = new Leveler(filename, makeTriangles);
 }
 
 // Initialization
@@ -171,13 +199,13 @@ var width = canvas.width, height = canvas.height, zMin = 0, zMax = 10;
 var context = canvas.getContext("2d");
 var numberPoints = 10;
 var points, convertPoints, triangles;
-var level;
+var leveler;
+var zoom = 100;
 
 document.getElementById("test").onclick = function() {
-    points = generatePoints(0, 0, zMin, width, height, zMax, numberPoints);
-    //Just for testing we put a point equal to the first one
-    points.push([ points[0][0], points[0][1], 99999 ]);
-    writePoints(points);
+    // generateAndWritePoints();
+    // setLeveler("slopPoints.txt");
+    setLeveler("pente.txt");
 };
 
 canvas.addEventListener('mouseup', function(evt) {
@@ -185,14 +213,43 @@ canvas.addEventListener('mouseup', function(evt) {
         return;
     }
     var mousePos = getMousePos(canvas, evt);
-    var convertPos = [mousePos.x, mousePos.y];
-    var result = level.findTriangle(convertPos);
-    var height = level.findHeight(convertPos);
+    var convertPos = [mousePos.x / zoom, mousePos.y / zoom];
+    var result = leveler.findTriangle(convertPos);
+    var height = leveler.findHeight(convertPos);
 
     drawTriangles(context, triangles, points, zMin, zMax);
+
+    // //Just for testing when point is the same than one of the edges
+    // convertPos[0] = points[result.triangle[0]][0];
+    // convertPos[1] = points[result.triangle[0]][1];
+    // result = leveler.findTriangle(convertPos);
+    // height = leveler.findHeight(convertPos);
+
     console.log(result);
-    if(result !== false) {
-        colorTriangle(context, result.triangle, points);
+    var a = [
+        points[result.triangle[0]][0],
+        points[result.triangle[0]][1],
+        points[result.triangle[0]][2]
+    ];
+    var b = [
+        points[result.triangle[1]][0],
+        points[result.triangle[1]][1],
+        points[result.triangle[1]][2]
+    ];
+    var c = [
+        points[result.triangle[2]][0],
+        points[result.triangle[2]][1],
+        points[result.triangle[2]][2]
+    ];
+    if(result === false) {
+        console.log("No result");
+        return;
     }
+    colorTriangle(context, result.triangle, points);
+    console.log("a: (" + a[0] + ", " + a[1] + ", " + a[2] + ")");
+    console.log("b: (" + b[0] + ", " + b[1] + ", " + b[2] + ")");
+    console.log("c: (" + c[0] + ", " + c[1] + ", " + c[2] + ")");
+    console.log("convertPos: (" + convertPos[0] + ", " + convertPos[1] + ", " +
+            height + ")");
 
 }, false);

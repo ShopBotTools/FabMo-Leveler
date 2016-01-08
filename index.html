@@ -6,13 +6,24 @@
 </head>
 <body>
     <button id="test">Triangulate</button>
-    <canvas id="canvas" width="600" height="400"></canvas>
-    <img id="image" />
+    <label>x: <input id="x" type="text" /> </label> <br />
+    <label>y: <input id="y" type="text" /> </label> <br />
+    <button id="test_point">Test point</button>
 
 
-    <!-- Wrong name, triangulation is not the same principle -->
-    <!-- <script src="tests.js"></script> -->
     <script src="leveler.js"></script>
-    <script src="pointsGeneration.js"></script>
+
+    <!-- Tests 3D -->
+    <div id="container" style="display: inline-block;">
+    </div>
+    <script src="three.min.js"></script>
+    <script src="CombinedCamera.js"></script>
+    <script src="OrbitControls.js"></script>
+    <script src="tests_3D.js" type="text/javascript"></script>
+
+    <!-- <!&#45;&#45; Tests 2D &#45;&#45;> -->
+    <!-- <canvas id="canvas" width="600" height="400"></canvas> -->
+    <!-- <script src="tests_2D.js"></script> -->
+
 </body>
 </html>
